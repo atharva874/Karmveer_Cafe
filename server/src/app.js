@@ -1,0 +1,20 @@
+import 'express-async-errors';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+import { rateLimit } from 'express-rate-limit';
+import routes from './routes.js';
+import { ensureSeeded } from './store.js';
+
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)) throw new Error('Production requires JWT_SECRET to contain at least 32 characters.');
+await ensureSeeded();
+const app = express();
+app.use(helmet());
+app.use(cors({origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', credentials:true}));
+app.use(express.json({limit:'32kb'})); app.use(cookieParser());
+app.use('/api/auth', rateLimit({windowMs:15*60*1000,limit:50,standardHeaders:true,legacyHeaders:false}));
+app.get('/api/health', (_req,res)=>res.json({ok:true})); app.use('/api',routes);
+app.use('/api',(req,res)=>res.status(404).json({error:`No API route for ${req.method} ${req.path}`}));
+app.use((err,_req,res,_next)=>{console.error(err);res.status(err.status||500).json({error:err.status?err.message:'Something went wrong. Please try again.'});});
+export default app;

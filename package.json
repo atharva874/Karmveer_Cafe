@@ -1,0 +1,8 @@
+{
+  "name": "karmaveer-cafe",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["client", "server"],
+  "scripts": {"dev": "concurrently -k -n api,web -c yellow,cyan \"npm:dev:server\" \"npm:dev:client\"", "dev:server": "npm --workspace server run dev", "dev:client": "npm --workspace client run dev", "build": "npm --workspace client run build", "seed": "npm --workspace server run seed", "test": "npm --workspace server test"},
+  "devDependencies": {"concurrently": "^9.1.2"}
+}

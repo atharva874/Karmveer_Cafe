@@ -1,0 +1,8 @@
+node_modules/
+.pnpm-store/
+client/dist/
+server/data/*.json
+server/data/*.tmp
+server/.env
+.env
+*.log

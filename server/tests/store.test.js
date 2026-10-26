@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+const temp=path.resolve('server','.test-data');
+await fs.rm(temp,{recursive:true,force:true});
+await fs.mkdir(temp,{recursive:true});
+process.env.DATA_DIR=temp;
+const store=await import('../src/store.js');
+test('seed initialization is idempotent and order records survive reads',async()=>{await store.ensureSeeded();const first=await store.readDb();await store.ensureSeeded();const second=await store.readDb();assert.equal(first.menu.length,36);assert.equal(first.menu.length,second.menu.length);await store.updateDb(d=>d.orders.push({id:'persisted-test-order'}));assert.ok((await store.readDb()).orders.some(o=>o.id==='persisted-test-order'));});
+test('simultaneous store updates are serialized without lost records',async()=>{await Promise.all(Array.from({length:24},(_,i)=>store.updateDb(d=>d.inquiries.push({id:`inquiry-${i}`}))));const d=await store.readDb();assert.equal(d.inquiries.filter(x=>x.id?.startsWith('inquiry-')).length,24);});
+test.after(async()=>fs.rm(temp,{recursive:true,force:true}));
