@@ -40,7 +40,7 @@ Keep `.env` and the JSON database out of source control. Do not expose the admin
 | `PORT` | Express listen port; defaults to `4000`. |
 | `CLIENT_ORIGIN` | Exact browser origin allowed by credentialed CORS; defaults to local Vite. |
 | `JWT_SECRET` | Secret for signed, HttpOnly session cookies. Set a long random production value. |
-| `COOKIE_SECURE` | Set `true` when served over HTTPS. |
+| `COOKIE_SECURE` | Cookies are secure automatically in production; set `true` when using HTTPS outside production. Secure cookies enable cross-site sessions for a separately hosted frontend and API. |
 | `DATA_DIR` | JSON data directory relative to `server/`; defaults to `server/data`. |
 | `BOOTSTRAP_ADMIN_EMAIL` | Email for the explicit admin bootstrap process. |
 | `BOOTSTRAP_ADMIN_PASSWORD` | Bootstrap password (12+ characters); do not commit it. |

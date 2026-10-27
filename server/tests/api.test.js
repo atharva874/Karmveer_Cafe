@@ -4,11 +4,18 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../.api-test-data');
-process.env.NODE_ENV='test';process.env.DATA_DIR=root;process.env.JWT_SECRET='test-secret-long-enough-for-local-api-tests-only';process.env.CLIENT_ORIGIN='http://localhost:5173';
+process.env.NODE_ENV='test';process.env.DATA_DIR=root;process.env.JWT_SECRET='test-secret-long-enough-for-local-api-tests-only';process.env.CLIENT_ORIGIN='http://localhost:5173';process.env.COOKIE_SECURE='false';
 let server,base,store;
 before(async()=>{await fs.rm(root,{recursive:true,force:true});const [{default:app},s]=await Promise.all([import('../src/app.js'),import('../src/store.js')]);store=s;server=app.listen(0);await new Promise(resolve=>server.once('listening',resolve));base=`http://127.0.0.1:${server.address().port}/api`;});
 after(async()=>{if(server)await new Promise(resolve=>server.close(resolve));await fs.rm(root,{recursive:true,force:true});});
-async function request(route,{method='GET',body,cookie}={}){const response=await fetch(`${base}${route}`,{method,headers:{...(body?{'content-type':'application/json'}:{}),...(cookie?{cookie}: {})},body:body?JSON.stringify(body):undefined});return {status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};}
+async function request(route,{method='GET',body,cookie}={}){const response=await fetch(`${base}${route}`,{method,headers:{...(body?{'content-type':'application/json'}:{}),...(cookie?{cookie}: {})},body:body?JSON.stringify(body):undefined});return {status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0],setCookie:response.headers.get('set-cookie')};}
+test('anonymous session check returns signed-out state and production cookies support cross-site auth',async()=>{
+  const anonymous=await request('/auth/me');assert.equal(anonymous.status,200);assert.equal(anonymous.data.user,null);
+  const reg=await request('/auth/register',{method:'POST',body:{name:'Cookie Test',email:'cookie@example.com',phone:'+919800000004',password:'StrongPassword1!'}});assert.equal(reg.status,201);
+  process.env.NODE_ENV='production';
+  try{const login=await request('/auth/login',{method:'POST',body:{email:'cookie@example.com',password:'StrongPassword1!'}});assert.equal(login.status,200);assert.match(login.setCookie,/SameSite=None/i);assert.match(login.setCookie,/;\s*Secure/i);}
+  finally{process.env.NODE_ENV='test';}
+});
 test('auth, authorization, guest and registered orders, server pricing, admin workflow, and contact validation',async()=>{
   const denied=await request('/admin/dashboard');assert.equal(denied.status,401);
   const badLogin=await request('/auth/login',{method:'POST',body:{email:'nobody@example.com',password:'wrong-pass'}});assert.equal(badLogin.status,401);
