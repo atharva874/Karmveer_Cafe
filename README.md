@@ -44,7 +44,7 @@ Keep `.env` and the JSON database out of source control. Do not expose the admin
 | `DATA_DIR` | JSON data directory relative to `server/`; defaults to `server/data`. |
 | `BOOTSTRAP_ADMIN_EMAIL` | Email for the explicit admin bootstrap process. |
 | `BOOTSTRAP_ADMIN_PASSWORD` | Bootstrap password (12+ characters); do not commit it. |
-| `VITE_API_URL` | Optional client API base URL, usually `/api`. |
+| `VITE_API_URL` | Optional client API URL; use `/api` or the backend origin (for example, `https://example.onrender.com`). The client appends `/api` when needed. |
 | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | Reserved for an optional approved WhatsApp Business Platform integration. No automatic notification is sent by this starter. |
 
 The cafe WhatsApp number is configured as `919823739334`. The working customer flow opens an official `wa.me` link with an encoded message; the customer must press Send. Opening WhatsApp is not delivery confirmation. Automatic cafe notifications require a configured WhatsApp Business provider, credentials, business setup, and recipient permissions.
